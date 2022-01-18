@@ -1,9 +1,10 @@
 import React, { Component } from "react";
 import { db, auth } from '../../firebase';
 import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo } from "firebase/database";
-import { Table, Button } from 'react-bootstrap';
-import MapContainer from '../Map'
+ import MapContainer from '../Map'
 import { connect } from 'react-redux'
+import { Table, Button, Modal, Form } from 'react-bootstrap';
+
 
 
 class Resolved extends React.Component {
@@ -12,7 +13,8 @@ class Resolved extends React.Component {
         userId: null,
         lat: null,
         long: null,
-        isShow: true
+        isShow: true,
+        modalShow: false
     }
 
 
@@ -81,23 +83,45 @@ class Resolved extends React.Component {
                             this.state.users.map(user => {
 
                                 return (
-
+                                    <>
                                     <tbody >
                                         <tr >
                                             <td style={{ borderStyle: 'none solid solid none', borderTopLeftRadius: '15px', borderBottomLeftRadius: '15px' }}>{`${user.username}`}</td>
                                             <td style={{ borderStyle: 'none solid solid none' }}>{`${user.lat}`}</td>
                                             <td style={{ borderStyle: 'none solid solid none' }}>{`${user.long}`}</td>
                                             <td style={{ borderTopRightRadius: '15px', borderBottomRightRadius: '15px' }}>
-                                                <Button onClick={() => {
+                                                <Button  onClick={() => {
                                                     this.setState({
                                                         userId: user.id,
                                                         isShow: false,
 
                                                     })
-                                                }} key={user.id}>View</Button>
+                                                }} key={user.id} style={{ marginRight: 20 }}>View</Button>
+                                                <Button onClick={() => this.setState({...this.state, modalShow: true})}>Notes</Button>
                                             </td>
                                         </tr>
                                     </tbody>
+                                    <Modal
+                                     show={this.state.modalShow}
+                                 size="lg"
+                                aria-labelledby="contained-modal-title-vcenter"
+                                centered
+                            > 
+                                <Modal.Header>
+                                <Modal.Title id="contained-modal-title-vcenter">
+                                    Respondent Report
+                                </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body>
+                                    <p>
+                                    {user.notes}
+                                    </p>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                 <Button  onClick={() => this.setState({...this.state, modalShow: false})}>Close</Button>
+                                </Modal.Footer>
+                               </Modal>
+                                    </>
 
 
                                 )
@@ -116,28 +140,30 @@ class Resolved extends React.Component {
 
 
                             user.id == this.state.userId ?
+                                <>
                                 <div className='card text-center'>
                                     <a className='btn btn-outline-danger' type='button' onClick={() => {
                                         this.setState({
                                             isShow: true
                                         })
                                     }}>Back</a>
+                                    
+                                        
 
                                     <div className='overflow'>
                                         <img className='card-img-top' src={`${user.profile_picture}`} alt='' />
                                     </div>
-                                    <div className='card-body text-dark'>
-                                        <h4 className='card-title'>{`${user.username}`}</h4>
-                                        <p>lorem asdadada</p>
-                                        <a className='btn btn-outline-danger' type='button' onClick={() => {
-                                            this.setState({
-                                                long: user.long,
-                                                lat: user.lat
-                                            })
-                                        }}>Location</a>
-                                    </div>
                                     <MapContainer lng={user.long} lat={user.lat} />
+
+                                    <div className='card-body text-dark'>
+                                
+ 
+                                    </div>
+                                    
                                 </div>
+                                     
+                                </>
+                                
                                 :
                                 null
                         )

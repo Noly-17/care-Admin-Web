@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { db, auth } from '../../firebase';
 import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo } from "firebase/database";
-import { Table, Button } from 'react-bootstrap';
+import { Table, Button, Modal, Form } from 'react-bootstrap';
 import MapContainer from '../Map'
 import { connect } from 'react-redux'
 
@@ -12,7 +12,8 @@ class TransferedResolved extends React.Component {
         userId: null,
         lat: null,
         long: null,
-        isShow: true
+        isShow: true,
+        modalShow: false
     }
 
 
@@ -81,25 +82,46 @@ class TransferedResolved extends React.Component {
                             this.state.users.map(user => {
 
                                 return (
-
+                                    <>
                                     <tbody >
                                         <tr >
                                             <td style={{ borderStyle: 'none solid solid none', borderTopLeftRadius: '15px', borderBottomLeftRadius: '15px' }}>{`${user.username}`}</td>
                                             <td style={{ borderStyle: 'none solid solid none' }}>{`${user.lat}`}</td>
                                             <td style={{ borderStyle: 'none solid solid none' }}>{`${user.long}`}</td>
                                             <td style={{ borderTopRightRadius: '15px', borderBottomRightRadius: '15px' }}>
-                                                <Button onClick={() => {
+                                                <Button style={{ marginRight: 20 }} onClick={() => {
                                                     this.setState({
                                                         userId: user.id,
                                                         isShow: false,
 
                                                     })
                                                 }} key={user.id}>View</Button>
+                                              <Button onClick={() => this.setState({...this.state, modalShow: true})}>Notes</Button>
+
                                             </td>
                                         </tr>
                                     </tbody>
-
-
+                                    <Modal
+                                     show={this.state.modalShow}
+                                 size="lg"
+                                aria-labelledby="contained-modal-title-vcenter"
+                                centered
+                            > 
+                                <Modal.Header>
+                                <Modal.Title id="contained-modal-title-vcenter">
+                                    Respondent Report
+                                </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body>
+                                    <p>
+                                    {user.notes}
+                                    </p>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                 <Button  onClick={() => this.setState({...this.state, modalShow: false})}>Close</Button>
+                                </Modal.Footer>
+                               </Modal>
+                                                </>
                                 )
                             })
                         }
@@ -142,7 +164,7 @@ class TransferedResolved extends React.Component {
                                 null
                         )
                     })
-                }
+                } 
 
 
 

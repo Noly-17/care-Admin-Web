@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { db, auth } from '../../firebase';
-import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo } from "firebase/database";
-import { Table, Button } from 'react-bootstrap';
+import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo, set } from "firebase/database";
+import { Table, Button, Modal, Form } from 'react-bootstrap';
 import MapContainer from '../Map'
 import { connect } from 'react-redux'
 
@@ -13,7 +13,8 @@ class TranferedOngoing extends React.Component {
         lat: null,
         long: null,
         isShow: true,
-        usersAddress: null
+        usersAddress: null,
+        modalShow: false
     }
 
 
@@ -59,6 +60,38 @@ class TranferedOngoing extends React.Component {
     }
 
 
+    handleReport = (event) => {
+        const text = event.target.value;
+        event.preventDefault()
+        console.log(text)
+
+        this.setState({ ...this.state, notes: text})
+
+
+     }
+
+
+    handleDone = () => {
+        this.setState({ ...this.state, Done: true})
+        // const updates = {};
+        //  updates['/requests/' + this.state.userId] = this.state.postData;
+        //  update(ref(db), updates)
+        const onGoingData = this.state.postData;
+        const notes = this.state.notes
+
+        let concatData = {
+            ...onGoingData,
+            notes
+        }
+
+
+
+        set(ref(db, 'requests/' + this.state.userId), concatData);
+
+
+    }
+
+
 
     render() {
 
@@ -83,7 +116,7 @@ class TranferedOngoing extends React.Component {
                             this.state.users.map(user => {
 
                                 return (
-
+                                        <>
                                     <tbody >
                                         <tr >
                                             <td style={{  borderStyle: 'none solid solid none', borderTopLeftRadius: '15px', borderBottomLeftRadius: '15px' }}>{`${user.username}`}</td>
@@ -104,11 +137,11 @@ class TranferedOngoing extends React.Component {
                                                         username: user.username,
                                                         };
 
-                                                        const updates = {};
-                                                        updates['/requests/' + user.id] = postData;
-                                                        update(ref(db), updates)
-
+  
                                                         this.setState({
+                                                            ...this.state,
+                                                            modalShow: true,
+                                                            postData: postData,
                                                             userId: user.id,
                                                         })
                                                     }} key={user.id}>Done</Button>
@@ -124,6 +157,29 @@ class TranferedOngoing extends React.Component {
                                         </tr>
                                     </tbody>
 
+
+                                    <Modal
+                                                    show={this.state.modalShow}
+                                 size="lg"
+                                aria-labelledby="contained-modal-title-vcenter"
+                                centered
+                            >
+                                <Modal.Header>
+                                <Modal.Title id="contained-modal-title-vcenter">
+                                    Respondent Report
+                                </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body>
+                                <Form.Control onChange={this.handleReport} value={this.state.notes} as="textarea" rows={10} placeholder="Enter A Report Here...">
+                                    
+                                </Form.Control>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                <Button onClick={this.handleDone} variant="success">Done</Button>
+                                <Button  onClick={this.state.modalShow}>Close</Button>
+                                </Modal.Footer>
+                               </Modal>
+                                    </>
 
                                 )
                             })

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { db, auth } from '../../firebase';
-import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo } from "firebase/database";
-import { Table, Button } from 'react-bootstrap';
+import { getDatabase, ref, child, get, update, onChildAdded, onChildChanged, onValue, onChildRemoved, query, orderByChild, equalTo, set } from "firebase/database";
+import { Table, Button, Modal, Form } from 'react-bootstrap';
 import MapContainer from '../Map'
 import { connect } from 'react-redux'
 
@@ -12,7 +12,11 @@ class Ongoing extends React.Component {
         userId: null,
         lat: null,
         long: null,
-        isShow: true
+        isShow: true,
+        modalShow: false,
+        notes: null,
+        Done: false,
+        postData: null
     }
 
 
@@ -57,9 +61,67 @@ class Ongoing extends React.Component {
 
     }
 
+    
+    handleReport = (event) => {
+        const text = event.target.value;
+        event.preventDefault()
+        console.log(text)
+
+        this.setState({ ...this.state, notes: text})
+
+
+     }
+
+    handleDone = () => {
+        this.setState({ ...this.state, Done: true})
+        // const updates = {};
+        //  updates['/requests/' + this.state.userId] = this.state.postData;
+        //  update(ref(db), updates)
+        const onGoingData = this.state.postData;
+        const notes = this.state.notes
+
+        let concatData = {
+            ...onGoingData,
+            notes
+        }
+
+
+
+        set(ref(db, 'requests/' + this.state.userId), concatData);
+
+
+    }
 
 
     render() {
+
+         
+
+        // const MyVerticallyCenteredModal = (props) => {
+        //     return (
+        //       <Modal
+        //         {...props}
+        //         size="lg"
+        //         aria-labelledby="contained-modal-title-vcenter"
+        //         centered
+        //       >
+        //         <Modal.Header>
+        //           <Modal.Title id="contained-modal-title-vcenter">
+        //             Respondent Report
+        //           </Modal.Title>
+        //         </Modal.Header>
+        //         <Modal.Body>
+        //            <Form.Control onChange={this.handleReport} value={this.state.notes} as="textarea" rows={10} placeholder="Enter A Report Here...">
+                    
+        //           </Form.Control>
+        //         </Modal.Body>
+        //         <Modal.Footer>
+        //           <Button onClick={this.handleDone} variant="success">Done</Button>
+        //           <Button onClick={props.onHide}>Close</Button>
+        //         </Modal.Footer>
+        //       </Modal>
+        //     );
+        //   }
 
 
         return (
@@ -67,6 +129,7 @@ class Ongoing extends React.Component {
                 {
                     this.state.isShow &&
                     <>
+                    
                     <Table striped bordered hover >
                     <thead  style={{backgroundColor: '#3db588'}}>
                             <tr>
@@ -83,7 +146,8 @@ class Ongoing extends React.Component {
                             this.state.users.map(user => {
 
                                 return (
-
+                                    <>
+                                    
                                     <tbody >
                                         <tr >
                                             <td style={{  borderStyle: 'none solid solid none', borderTopLeftRadius: '15px', borderBottomLeftRadius: '15px' }}>{`${user.username}`}</td>
@@ -92,7 +156,10 @@ class Ongoing extends React.Component {
                                             <td style={{  borderStyle: 'none solid solid none' }}>{`${user.lat}`}</td>
                                             <td style={{  borderStyle: 'none solid solid none' }}>{`${user.long}`}</td>
                                             <td style={{  borderTopRightRadius: '15px', borderBottomRightRadius: '15px' }}>
-                                            <Button style={{ marginRight: 20 }} onClick={() => {
+                                                 
+                                                <Button style={{ marginRight: 20 }} onClick={() => {
+                                                    this.setState({...this.state, modalShow: true})
+                                                    
                                                     const postData = {
                                                         email: user.email,
                                                         id: user.id,
@@ -103,16 +170,20 @@ class Ongoing extends React.Component {
                                                         profile_picture: user.profile_picture,
                                                         status: "Resolved",
                                                         username: user.username,
-                                                        };
+                                                         };
 
-                                                        const updates = {};
-                                                        updates['/requests/' + user.id] = postData;
-                                                        update(ref(db), updates)
+ 
 
                                                         this.setState({
+                                                            ...this.state,
+                                                            modalShow: true,
+                                                            postData: postData,
                                                             userId: user.id,
                                                         })
+                                                        console.log('userID :', this.state.userId)
+                                                      
                                                     }} key={user.id}>Done</Button>
+
                                                 <Button onClick={() => {
                                                     this.setState({
                                                         userId: user.id,
@@ -123,8 +194,29 @@ class Ongoing extends React.Component {
                                             </td>
                                         </tr>
                                     </tbody>
-
-
+                                                    <Modal
+                                                    show={this.state.modalShow}
+                                 size="lg"
+                                aria-labelledby="contained-modal-title-vcenter"
+                                centered
+                            >
+                                <Modal.Header>
+                                <Modal.Title id="contained-modal-title-vcenter">
+                                    Respondent Report
+                                </Modal.Title>
+                                </Modal.Header>
+                                <Modal.Body>
+                                <Form.Control onChange={this.handleReport} value={this.state.notes} as="textarea" rows={10} placeholder="Enter A Report Here...">
+                                    
+                                </Form.Control>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                <Button onClick={this.handleDone} variant="success">Done</Button>
+                                <Button  onClick={this.state.modalShow}>Close</Button>
+                                </Modal.Footer>
+                               </Modal>
+                                  
+                                                </>
                                 )
                             })
                         }
@@ -142,6 +234,7 @@ class Ongoing extends React.Component {
 
                             user.id == this.state.userId ?
                                 <div className='card text-center'>
+                                    
                                     <a className='btn btn-outline-danger' type='button' onClick={() => {
                                         this.setState({
                                             isShow: true
@@ -153,7 +246,7 @@ class Ongoing extends React.Component {
                                     </div>
                                     <div className='card-body text-dark'>
                                         <h4 className='card-title'>{`${user.username}`}</h4>
-                                        <p>lorem asdadada</p>
+                                       
                                         <a className='btn btn-outline-danger' type='button' onClick={() => {
                                             this.setState({
                                                 long: user.long,
@@ -162,6 +255,7 @@ class Ongoing extends React.Component {
                                         }}>Location</a>
                                     </div>
                                     <MapContainer lng={user.long} lat={user.lat} />
+                                    
                                 </div>
                                 :
                                 null
